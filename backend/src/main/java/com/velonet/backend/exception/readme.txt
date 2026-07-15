@@ -1,0 +1,1 @@
+Excepciones personalizadas y manejo global de errores
