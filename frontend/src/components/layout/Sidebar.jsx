@@ -12,8 +12,8 @@ import DashboardIcon from "@mui/icons-material/Dashboard"
 import BarChartIcon from "@mui/icons-material/BarChart";
 import AssessmentIcon from "@mui/icons-material/Assessment"
 import SettingIcon from "@mui/icons-material/Settings"
+import { drawerWidth } from "./../../constants/layout";
 
-const drawerWidth = 240;
 const menu = [
     {
         text: "Dashboard",
@@ -41,7 +41,7 @@ function Sidebar() {
             sx={{
                 width: drawerWidth,
                 flexShrink: 0,
-                "& .MiuDrawer-paper": {
+                "& .MuiDrawer-paper": {
                     width: drawerWidth,
                     boxSizing: "border-box",
                 },

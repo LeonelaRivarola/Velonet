@@ -1,10 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import App from './App.jsx'
+import es from 'date-fns/locale/es'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+      <App />
+    </LocalizationProvider>
   </StrictMode>,
 )

@@ -4,24 +4,33 @@ import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
 
 
-function MainLayout({ children }){
+function MainLayout({ children }) {
 
     return (
-        <Box sx={{display:"flex"}}>
+        <Box sx={{ display: "flex" }}>
 
             <Header />
             <Sidebar />
-                
-            <Box component="main" 
+
+            <Box component="main"
                 sx={{
                     flexGrow: 1,
-                    bgcolor:"#f4f6f8",
-                    minHeight:"100vh",
-                    p: 4,
+                    bgcolor: "#f4f6f8",
+                    minHeight: "100vh",
+                    overflow: "auto"
                 }}
             >
                 <Toolbar />
-                {children}
+
+                <Box
+                    sx={{
+                        p: 4,
+                        maxWidth: "1800px",
+                        mx: "auto"
+                    }}
+                >
+                    {children}
+                </Box>
 
             </Box>
 
