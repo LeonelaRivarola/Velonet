@@ -17,7 +17,7 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry){
 
                 registry.addMapping("/**")
-                    .allowedOrigins("http://localhost:5173") //para que react acceda al back
+                    .allowedOrigins("http://localhost:5174") //para que react acceda al back
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                     .allowedHeaders("*");
         }
