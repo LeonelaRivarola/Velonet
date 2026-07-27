@@ -5,29 +5,30 @@ import FilterBar from '../components/dashboard/FilterBar';
 import CardMetric from '../components/dashboard/MetricCard';
 
 import { FiUsers, FiFileText, FiTrendingDown, FiActivity, FiDollarSign, FiAlertTriangle } from 'react-icons/fi';
+import useDashboard from '../hooks/useDashboard';
 
 // DATOS FICTICIOS COMPLETOS BASADOS EN EL AUDIO:
 const mockDatosControl = [
-  { 
-    periodo: 'Abril', 
-    recaudadoAlDia15: 1450000, 
-    deudaFinMes: 420000, 
+  {
+    periodo: 'Abril',
+    recaudadoAlDia15: 1450000,
+    deudaFinMes: 420000,
     cortadosAlDia23: 12,
     bajasVoluntarias: 5,
     bajasPorFaltaPago: 8
   },
-  { 
-    periodo: 'Mayo', 
-    recaudadoAlDia15: 1620000, 
-    deudaFinMes: 380000, 
+  {
+    periodo: 'Mayo',
+    recaudadoAlDia15: 1620000,
+    deudaFinMes: 380000,
     cortadosAlDia23: 8,
     bajasVoluntarias: 4,
     bajasPorFaltaPago: 6
   },
-  { 
-    periodo: 'Junio', 
-    recaudadoAlDia15: 1890000, 
-    deudaFinMes: 590000, 
+  {
+    periodo: 'Junio',
+    recaudadoAlDia15: 1890000,
+    deudaFinMes: 590000,
     cortadosAlDia23: 19,
     bajasVoluntarias: 9,
     bajasPorFaltaPago: 14
@@ -36,26 +37,36 @@ const mockDatosControl = [
 
 export default function Dashboard() {
   const [cobroTerceros, setCobroTerceros] = useState(null);
+  const { metrics, curvaPagos, loading } = useDashboard();
 
   const handleSearch = (filters) => {
     console.log("Filtros aplicados (Contrato Modelo / Fechas):", filters);
   };
 
   const calcularCobroTerceros = () => {
-    const baseCalculo = 1845000; 
+    const baseCalculo = 1845000;
     setCobroTerceros(baseCalculo.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }));
   };
 
+  const datosCurva = curvaPagos.map(item => ({
+    periodo: item.mesAnio,
+    recaudadoAlDia15: item.totalCobrado
+  }));
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
   return (
     <Box sx={{ width: '100%', backgroundColor: '#f8fafc', minHeight: '100%' }}>
-      
+
       {/* Banner Superior */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 3, 
-          mb: 4, 
-          backgroundColor: '#ffffff', 
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mb: 4,
+          backgroundColor: '#ffffff',
           borderLeft: '6px solid #0d47a1',
           borderRadius: '8px',
           boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)'
@@ -76,56 +87,56 @@ export default function Dashboard() {
       <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold', color: '#0d47a1', letterSpacing: '0.5px' }}>
         KPI // CONTROL DE CONTRATOS Y CLIENTES
       </Typography>
-      
+
       <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <CardMetric 
-            title="Clientes Activos" 
-            value="5,840" 
-            icon={FiUsers} 
-            color="primary" 
-            percentage="+2.1%" 
+          <CardMetric
+            title="Clientes Activos"
+            value={metrics?.totalClientesActivos ?? 0}
+            icon={FiUsers}
+            color="primary"
+            percentage="+2.1%"
             isPositive={true}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <CardMetric 
-            title="Contratos Activos" 
-            value="8,327" //
-            icon={FiFileText} 
-            color="success" 
-            percentage="+1.8%" 
+          <CardMetric
+            title="Contratos Activos"
+            value={metrics?.totalContratoActivos ?? 0}
+            icon={FiFileText}
+            color="success"
+            percentage="+1.8%"
             isPositive={true}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <CardMetric 
-            title="Bajas de Contratos" 
-            value="23" 
-            icon={FiTrendingDown} 
-            color="error" 
-            percentage="+12.4%" 
+          <CardMetric
+            title="Bajas de Contratos"
+            value="23"
+            icon={FiTrendingDown}
+            color="error"
+            percentage="+12.4%"
             isPositive={false}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <CardMetric 
+          <CardMetric
             title="Cortados (Día 23)" //
-            value="19" 
-            icon={FiActivity} 
-            color="warning" 
-            percentage="-5.1%" 
+            value="19"
+            icon={FiActivity}
+            color="warning"
+            percentage="-5.1%"
             isPositive={true}
           />
         </Grid>
         {/* NUEVO KPI: CUMPLIENDO PUNTO 5 DEL AUDIO */}
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <CardMetric 
+          <CardMetric
             title="Sin Cobro (Auditoría)" //
-            value="42" 
-            icon={FiAlertTriangle} 
-            color="error" 
-            percentage="Revisar" 
+            value={metrics?.contratosSinCobroAuditoria ?? 0}
+            icon={FiAlertTriangle}
+            color="error"
+            percentage="Revisar"
             isPositive={false}
           />
         </Grid>
@@ -137,7 +148,7 @@ export default function Dashboard() {
       </Typography>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        
+
         {/* GRÁFICO 1: Curvas de Pago al Día 15 */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
@@ -149,7 +160,7 @@ export default function Dashboard() {
             </Typography>
             <Box sx={{ width: '100%', height: 260 }}>
               <ResponsiveContainer>
-                <ComposedChart data={mockDatosControl} margin={{ left: -15, right: 5 }}>
+                <ComposedChart data={datosCurva} margin={{ left: -15, right: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
                   <YAxis tick={{ fill: '#0d47a1', fontSize: 12 }} />
@@ -225,16 +236,16 @@ export default function Dashboard() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Fórmula de tasación automatizada: 60% base de abonos compartidos + Costos de Postes + Enlaces Icasatti + Licenciamiento OLT Cloud.
               </Typography>
-              
+
               <Divider sx={{ my: 2 }} />
-              
+
               <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems="center" justifyContent="space-between" gap={3}>
-                <Button 
-                  variant="contained" 
+                <Button
+                  variant="contained"
                   startIcon={<FiDollarSign />}
                   onClick={calcularCobroTerceros}
-                  sx={{ 
-                    backgroundColor: '#ff9800', 
+                  sx={{
+                    backgroundColor: '#ff9800',
                     '&:hover': { backgroundColor: '#e65100' },
                     fontWeight: 'bold',
                     textTransform: 'none',
