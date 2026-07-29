@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import com.velonet.backend.dto.CurvaPagoMensualDTO;
 import com.velonet.backend.dto.ReciboDTO;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CurvaPagosService {
@@ -17,21 +19,59 @@ public class CurvaPagosService {
         this.recibosService = recibosService;
     }
 
-    public List<CurvaPagoMensualDTO> getCurvaPagos(String fechaDesde, String fechaHasta) {
+    public List<CurvaPagoMensualDTO> getCurvaPagos(int periodo) {
 
-        List<ReciboDTO> recibos = recibosService.getRecibos(fechaDesde, fechaHasta);
+        int meses;
 
-        return recibos.stream()
-            .map(recibo -> new CurvaPagoMensualDTO(recibo.getFecha(), recibo.getImporte()))
-            .sorted((a, b) -> {
-                //separamos por - o / y armo yyyymm parar ordenar 
-                String[] parteA = a.getMesAnio().split("[-/]");
-                String[] parteB = a.getMesAnio().split("[-/]");
-                String anioMesA = parteA[1] + parteA[0];
-                String anioMesB = parteB[1] + parteB[0];
-                return anioMesA.compareTo(anioMesB);
+        switch (periodo) {
+            case 60:
+                meses = 2;
+                break;
 
-            })
-            .collect(Collectors.toList());
+            case 90:
+                meses = 3;
+                break;
+
+            case 365:
+                meses = 12;
+                break;
+
+            default:
+                meses = 2;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+        int diaCorte = 15;
+
+        List<CurvaPagoMensualDTO> resultado = new ArrayList<>();
+
+        for (int i = meses - 1; i >= 0; i--) {
+
+            LocalDate mes = LocalDate.now().minusMonths(i);
+
+            LocalDate fechaDesde = mes.withDayOfMonth(1);
+
+            int ultimoDia = mes.lengthOfMonth();
+
+            LocalDate fechaHasta = mes.withDayOfMonth(
+                    Math.min(diaCorte, ultimoDia));
+
+            List<ReciboDTO> recibos = recibosService.getRecibos(
+                    fechaDesde.format(formatter),
+                    fechaHasta.format(formatter));
+
+            double total = 0;
+
+            for (ReciboDTO recibo : recibos) {
+                total += recibo.getImporte();
+            }
+            resultado.add(
+                    new CurvaPagoMensualDTO(
+                            mes.format(DateTimeFormatter.ofPattern("MM-yyyy")),
+                            total));
+        }
+
+        return resultado;
     }
 }

@@ -7,11 +7,10 @@ export const getMetrics = async () => {
     return response.data;
 };
 
-export const getCurvaPagos = async (fechaDesde, fechaHasta) => {
+export const getCurvaPagos = async (periodo = 60) => {
     const response = await axios.get(`${API}/pagos`, {
         params: {
-            fechaDesde,
-            fechaHasta
+            periodo
         }
     });
     return response.data;

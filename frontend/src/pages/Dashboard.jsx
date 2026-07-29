@@ -160,10 +160,11 @@ export default function Dashboard() {
             </Typography>
             <Box sx={{ width: '100%', height: 260 }}>
               <ResponsiveContainer>
-                <ComposedChart data={datosCurva} margin={{ left: -15, right: 5 }}>
+                <ComposedChart data={datosCurva} margin={{ top: 10,left: 25, right: 15, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
-                  <YAxis tick={{ fill: '#0d47a1', fontSize: 12 }} />
+                  <YAxis tick={{ fill: '#0d47a1', fontSize: 12 }} tickFormatter={(value) =>
+        new Intl.NumberFormat("es-AR").format(value)} />
                   <Tooltip formatter={(value) => `$${value.toLocaleString('es-AR')}`} />
                   <Bar dataKey="recaudadoAlDia15" name="Recaudado ($)" fill="#0d47a1" barSize={35} radius={[4, 4, 0, 0]} />
                 </ComposedChart>

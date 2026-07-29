@@ -28,7 +28,8 @@ public class RecibosService {
         body.put("cantidad", 100);
 
         // crear la lista vacia
-        Map<String, Double> totalesPorMes = new HashMap<>();
+        // Map<String, Double> totalesPorMes = new HashMap<>();
+        List<ReciboDTO> lista = new ArrayList<>();
 
         int offset = 0;
         int resultados = Integer.MAX_VALUE;
@@ -68,31 +69,36 @@ public class RecibosService {
                     total += Double.parseDouble(detalle.get("importe").toString());
                 }
 
-                // agrupamos por mes
-                String mes = fecha.substring(3, 10); // MM-YYYY
-                totalesPorMes.merge(
-                    mes,
-                    total,
-                    Double::sum
+                // // agrupamos por mes
+                // String mes = fecha.substring(3, 10); // MM-YYYY
+                // totalesPorMes.merge(
+                //     mes,
+                //     total,
+                //     Double::sum
+                // );
+
+                lista.add(
+                    new ReciboDTO(fecha, total)
                 );
             }
             
             offset += 100;
         }
 
-        List<ReciboDTO> lista = new ArrayList<>();
+        // List<ReciboDTO> lista = new ArrayList<>();
 
-        totalesPorMes.entrySet()
-            .stream()
-            .sorted(Map.Entry.comparingByKey())
-            .forEach(entry ->
-                lista.add(
-                    new ReciboDTO(entry.getKey()
-                    , entry.getValue()
-                )
-            )
-        );
-        
+        // totalesPorMes.entrySet()
+        //     .stream()
+        //     .sorted(Map.Entry.comparingByKey())
+        //     .forEach(entry ->
+        //         lista.add(
+        //             new ReciboDTO(entry.getKey()
+        //             , entry.getValue()
+        //         )
+        //     )
+        // );
+
         return lista;
+
     }
 }

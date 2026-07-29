@@ -34,8 +34,10 @@ public class DashboardController {
     }
 
     @GetMapping("/pagos")
-    public ResponseEntity<List<CurvaPagoMensualDTO>> getCurvaPagos(@RequestParam String fechaDesde, @RequestParam String fechaHasta) {
-        List<CurvaPagoMensualDTO> curva = curvaPagosService.getCurvaPagos(fechaDesde, fechaHasta);
+    public ResponseEntity<List<CurvaPagoMensualDTO>> getCurvaPagos(@RequestParam(defaultValue = "60") int periodo){
+
+        List<CurvaPagoMensualDTO> curva = curvaPagosService.getCurvaPagos(periodo);
+        
         return ResponseEntity.ok(curva);
     }
 

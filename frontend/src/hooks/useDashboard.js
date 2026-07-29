@@ -13,7 +13,7 @@ export default function useDashboard() {
             try {
 
                 const data = await getMetrics();
-                const curva =  await getCurvaPagos( "01-01-2026", "31-12-2026");
+                const curva =  await getCurvaPagos(60);
 
                 setMetrics(data)
                 setCurvaPagos(curva);
