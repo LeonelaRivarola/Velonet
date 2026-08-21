@@ -26,9 +26,9 @@ public class HistorialCuentaCorriente {
     }
 
     public Long getId(){ return id; }
-    public LocalDate getfecha(){ return fecha; }
+    public LocalDate getFecha(){ return fecha; }
     public double getMonto(){ return monto; }   
-    public void setfecha(LocalDate fecha){ this.fecha = fecha; }
+    public void setFecha(LocalDate fecha){ this.fecha = fecha; }
     public void setMonto(double monto){ this.monto = monto; }
 
 }

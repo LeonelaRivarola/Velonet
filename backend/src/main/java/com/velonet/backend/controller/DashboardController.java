@@ -86,11 +86,7 @@ public class DashboardController {
         return ResponseEntity.ok(saldoTotal);
     }
 
-    // @GetMapping("/deuda-total-cuenta-corriente")
-    // public ResponseEntity<Double> getDeudaTotalCuentaCorriente() {
-    //     double deudaTotal = cuentaCorrienteService.getDeudaTotalCuentaCorriente();
-    //     return ResponseEntity.ok(deudaTotal);
-    // }
+
 
     @GetMapping("/cuenta-corriente/snapshot")
     public ResponseEntity<String> generarSnapshotCuentaCorriente() {

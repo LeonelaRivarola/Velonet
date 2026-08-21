@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurvaPagos, getMetrics, getHistoricoDeudores } from "../services/dashboardService";
+import { getCurvaPagos, getMetrics, getHistoricoDeudores, getHistorialCuentaCorriente } from "../services/dashboardService";
 
 export default function useDashboard() {
 
