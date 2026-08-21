@@ -37,7 +37,7 @@ const mockDatosControl = [
 
 export default function Dashboard() {
   const [cobroTerceros, setCobroTerceros] = useState(null);
-  const { metrics, curvaPagos, loading } = useDashboard();
+  const { metrics, curvaPagos, loading, deudores } = useDashboard();
 
   const handleSearch = (filters) => {
     console.log("Filtros aplicados (Contrato Modelo / Fechas):", filters);
@@ -51,6 +51,11 @@ export default function Dashboard() {
   const datosCurva = curvaPagos.map(item => ({
     periodo: item.mesAnio,
     recaudadoAlDia15: item.totalCobrado
+  }));
+
+  const datosDeudores = deudores.map(item => ({
+    periodo: item.mes,
+    deudores: item.cantidad
   }));
 
   if (loading) {
@@ -184,15 +189,17 @@ export default function Dashboard() {
             </Typography>
             <Box sx={{ width: '100%', height: 260 }}>
               <ResponsiveContainer>
-                <ComposedChart data={mockDatosControl} margin={{ left: -15, right: -15 }}>
+                <ComposedChart data={datosDeudores} margin={{ left: -15, right: -15 }}>
+
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
-                  <YAxis yAxisId="left" tick={{ fill: '#ff9800', fontSize: 11 }} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fill: '#ef4444', fontSize: 11 }} />
+                  <YAxis tick={{ fill: '#b91c1c', fontSize: 12 }} />
+
                   <Tooltip />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar yAxisId="left" dataKey="deudaFinMes" name="Deuda ($)" fill="#ff9800" barSize={25} opacity={0.8} />
-                  <Line yAxisId="right" type="monotone" dataKey="cortadosAlDia23" name="Cortados (Cant.)" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} />
+
+                  <Legend/>
+
+                  <Line type="monotone" dataKey="deudores" name="Clientes Deudores" stroke="#ef4444" strokeWidth={3} dot={{ r: 5 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </Box>

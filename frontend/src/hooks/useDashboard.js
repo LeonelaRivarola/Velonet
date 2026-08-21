@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { getCurvaPagos, getMetrics } from "../services/dashboardService";
+import { getCurvaPagos, getMetrics, getHistoricoDeudores } from "../services/dashboardService";
 
 export default function useDashboard() {
 
     const [metrics, setMetrics] = useState(null);
     const [curvaPagos, setCurvaPagos] = useState([]);
+    const [deudores, setDeudores] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -14,8 +15,10 @@ export default function useDashboard() {
 
                 const data = await getMetrics();
                 const curva =  await getCurvaPagos(60);
+                const historico = await getHistoricoDeudores();
 
-                setMetrics(data)
+                setMetrics(data);
+                setDeudores(historico);
                 setCurvaPagos(curva);
             } finally {
                 setLoading(false)
@@ -26,6 +29,6 @@ export default function useDashboard() {
     }, []);
 
     return {
-        metrics, curvaPagos, loading
+        metrics, curvaPagos, loading, deudores
     };
 }

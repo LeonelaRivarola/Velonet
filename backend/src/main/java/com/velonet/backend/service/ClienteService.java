@@ -30,4 +30,13 @@ public class ClienteService {
 
         return 0;
     }
+
+    public Map<String, Object> getClientes(){
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("action", "clientes_consulta");
+
+        return realSoftwareClient.post(body);
+
+    }
 }

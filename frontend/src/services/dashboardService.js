@@ -14,4 +14,9 @@ export const getCurvaPagos = async (periodo = 60) => {
         }
     });
     return response.data;
+};
+
+export async function getHistoricoDeudores() {
+    const response = await axios.get(`${API}/deudores`);
+    return response.data;
 }
