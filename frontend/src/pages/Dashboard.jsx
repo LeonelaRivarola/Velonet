@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Grid2 as Grid, Typography, Paper, Button, Divider, Card, CardContent } from '@mui/material';
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import FilterBar from '../components/dashboard/FilterBar';
 import CardMetric from '../components/dashboard/MetricCard';
 
-import { FiUsers, FiFileText, FiTrendingDown, FiActivity, FiDollarSign, FiAlertTriangle } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiTrendingDown, FiActivity, FiDollarSign, FiAlertTriangle, FiCreditCard } from 'react-icons/fi';
 import useDashboard from '../hooks/useDashboard';
 
 // DATOS FICTICIOS COMPLETOS BASADOS EN EL AUDIO:
@@ -37,7 +37,7 @@ const mockDatosControl = [
 
 export default function Dashboard() {
   const [cobroTerceros, setCobroTerceros] = useState(null);
-  const { metrics, curvaPagos, loading, deudores } = useDashboard();
+  const { metrics, curvaPagos, loading, deudores, historialCuentaCorriente } = useDashboard();
 
   const handleSearch = (filters) => {
     console.log("Filtros aplicados (Contrato Modelo / Fechas):", filters);
@@ -53,10 +53,37 @@ export default function Dashboard() {
     recaudadoAlDia15: item.totalCobrado
   }));
 
-  const datosDeudores = deudores.map(item => ({
-    periodo: item.mes,
-    deudores: item.cantidad
-  }));
+
+  const normalizarPeriodo = (fechaOMes) => {
+  if (fechaOMes.includes('-') && fechaOMes.split('-')[0].length === 4) {
+    const [anio, mes] = fechaOMes.split('-');
+    return `${mes}-${anio}`;
+  }
+  return fechaOMes;
+};
+
+  //unificacion de deuda en $ y cantidad de deudores
+  const datosDeudaYDeudores = useMemo(() => {
+    const mapaDatos = {};
+
+    historialCuentaCorriente.forEach(item => {
+      const periodo = normalizarPeriodo(item.fecha);
+      mapaDatos[periodo] = { ...mapaDatos[periodo], periodo, deudaTotal: item.monto };
+    });
+
+    deudores.forEach(item => {
+      const periodo = normalizarPeriodo(item.mes);
+      mapaDatos[periodo] = { ...mapaDatos[periodo], periodo, deudoresCant: item.cantidad };
+    });
+
+    return Object.values(mapaDatos).sort((a, b) => {
+      const [mesA, anioA] = a.periodo.split('-');
+      const [mesB, anioB] = b.periodo.split('-');
+      return new Date(`${anioA}-${mesA}-01`) - new Date(`${anioB}-${mesB}-01`);
+    });
+  }, [historialCuentaCorriente, deudores]);
+
+  const ultimoMontoCC = historialCuentaCorriente.length > 0 ? historialCuentaCorriente[historialCuentaCorriente.length - 1].monto : 0;
 
   if (loading) {
     return <div>Cargando...</div>;
@@ -88,7 +115,7 @@ export default function Dashboard() {
       {/* Filtros */}
       <FilterBar onSearch={handleSearch} />
 
-      {/* Sección KPIs */}
+      {/* Sección KPIs principales*/}
       <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold', color: '#0d47a1', letterSpacing: '0.5px' }}>
         KPI // CONTROL DE CONTRATOS Y CLIENTES
       </Typography>
@@ -104,6 +131,19 @@ export default function Dashboard() {
             isPositive={true}
           />
         </Grid>
+
+        {/*Tarjeta kpi 3: deuda cuenta corriente */}
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <CardMetric
+            title="Deuda en Cuenta Corriente"
+            value={`$${(ultimoMontoCC / 1000000).toFixed(2)}M`}
+            icon={FiCreditCard}
+            color="error"
+            percentage="Snapshot 3AM"
+            isPositive={false}
+          />
+        </Grid>
+
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <CardMetric
             title="Contratos Activos"
@@ -114,6 +154,18 @@ export default function Dashboard() {
             isPositive={true}
           />
         </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <CardMetric
+            title="Cortados (Día 23)"
+            value="19"
+            icon={FiActivity}
+            color="warning"
+            percentage="-5.1%"
+            isPositive={true}
+          />
+        </Grid>
+
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <CardMetric
             title="Bajas de Contratos"
@@ -124,16 +176,7 @@ export default function Dashboard() {
             isPositive={false}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <CardMetric
-            title="Cortados (Día 23)" //
-            value="19"
-            icon={FiActivity}
-            color="warning"
-            percentage="-5.1%"
-            isPositive={true}
-          />
-        </Grid>
+
         {/* NUEVO KPI: CUMPLIENDO PUNTO 5 DEL AUDIO */}
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <CardMetric
@@ -165,11 +208,11 @@ export default function Dashboard() {
             </Typography>
             <Box sx={{ width: '100%', height: 260 }}>
               <ResponsiveContainer>
-                <ComposedChart data={datosCurva} margin={{ top: 10,left: 25, right: 15, bottom: 10 }}>
+                <ComposedChart data={datosCurva} margin={{ top: 10, left: 25, right: 15, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
                   <YAxis tick={{ fill: '#0d47a1', fontSize: 12 }} tickFormatter={(value) =>
-        new Intl.NumberFormat("es-AR").format(value)} />
+                    new Intl.NumberFormat("es-AR").format(value)} />
                   <Tooltip formatter={(value) => `$${value.toLocaleString('es-AR')}`} />
                   <Bar dataKey="recaudadoAlDia15" name="Recaudado ($)" fill="#0d47a1" barSize={35} radius={[4, 4, 0, 0]} />
                 </ComposedChart>
@@ -178,42 +221,99 @@ export default function Dashboard() {
           </Paper>
         </Grid>
 
-        {/* GRÁFICO 2: Curvas de Deudores y Cortes al Día 23 */}
-        <Grid size={{ xs: 12, md: 4 }}>
+
+        {/* NUEVO GRÁFICO 2: HISTORIAL DEUDA CUENTA CORRIENTE (KPI 3) */}
+        {/* GRÁFICO 2: Historial Deuda + Clientes Deudores */}
+<Grid size={{ xs: 12, md: 4 }}>
+  <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
+    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#d32f2f' }}>
+      2. Historial Deuda Cuenta Corriente
+    </Typography>
+    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+      Evolución de la deuda en Cuenta Corriente vs. cantidad de clientes deudores.
+    </Typography>
+    <Box sx={{ width: '100%', height: 260 }}>
+      <ResponsiveContainer>
+        <ComposedChart data={datosDeudaYDeudores} margin={{ top: 10, left: 5, right: 15, bottom: 10 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+          <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
+
+          <YAxis
+            yAxisId="izq"
+            orientation="left"
+            tick={{ fill: '#d32f2f', fontSize: 10 }}
+            tickFormatter={(val) => `$${(val / 1000000).toFixed(1)}M`}
+          />
+          <YAxis
+            yAxisId="der"
+            orientation="right"
+            tick={{ fill: '#0d47a1', fontSize: 10 }}
+            allowDecimals={false}
+          />
+
+          <Tooltip
+            formatter={(val, name) =>
+              name === 'Deuda ($)' ? `$${Number(val).toLocaleString('es-AR')}` : `${val} clientes`
+            }
+          />
+          <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
+
+          <Bar
+            yAxisId="der"
+            dataKey="deudoresCant"
+            name="Clientes Deudores"
+            fill="#93c5fd"
+            barSize={30}
+            radius={[6, 6, 0, 0]}
+          />
+          <Line
+            yAxisId="izq"
+            type="monotone"
+            dataKey="deudaTotal"
+            name="Deuda ($)"
+            stroke="#d32f2f"
+            strokeWidth={3}
+            dot={{ r: 5, fill: '#d32f2f', strokeWidth: 2, stroke: '#fff' }}
+            activeDot={{ r: 7 }}
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </Box>
+  </Paper>
+</Grid>
+
+        {/* GRÁFICO 3: Curvas de Deudores */}
+        {/* <Grid size={{ xs: 12, md: 3 }}>
           <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#b91c1c' }}>
               2. Deudores e Impacto de Cortes
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-              Saldo deudor fin de mes vs. Cortes efectivos al Día 23.
+              Saldo deudor fin de mes vs. Cortes.
             </Typography>
             <Box sx={{ width: '100%', height: 260 }}>
               <ResponsiveContainer>
-                <ComposedChart data={datosDeudores} margin={{ left: -15, right: -15 }}>
-
+                <ComposedChart data={datosDeudaYDeudores} margin={{ left: -15, right: -15 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
                   <YAxis tick={{ fill: '#b91c1c', fontSize: 12 }} />
-
                   <Tooltip />
-
-                  <Legend/>
-
-                  <Line type="monotone" dataKey="deudores" name="Clientes Deudores" stroke="#ef4444" strokeWidth={3} dot={{ r: 5 }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="deudoresCant                      " name="Clientes Deudores" stroke="#ef4444" strokeWidth={3} dot={{ r: 5 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </Box>
           </Paper>
-        </Grid>
+        </Grid> */}
 
-        {/* NUEVO GRÁFICO 3: CUMPLIENDO PUNTO 3 (MOTIVOS DE BAJAS) */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        {/* GRÁFICO 4: Bajas */}
+        <Grid size={{ xs: 12, md: 3 }}>
           <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#374151' }}>
-              3. Desglose de Bajas (Churn)
+              5. Desglose de Bajas (Churn)
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-              Diferenciación analítica de los motivos de desconformidad.
+              Motivos de desconformidad.
             </Typography>
             <Box sx={{ width: '100%', height: 260 }}>
               <ResponsiveContainer>
@@ -223,8 +323,8 @@ export default function Dashboard() {
                   <YAxis tick={{ fill: '#4b5563', fontSize: 12 }} />
                   <Tooltip />
                   <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="bajasVoluntarias" name="Voluntarias" fill="#475569" barSize={20} stackId="bajas" />
-                  <Bar dataKey="bajasPorFaltaPago" name="Por Falta de Pago" fill="#f43f5e" barSize={20} stackId="bajas" />
+                  <Bar dataKey="bajasVoluntarias" name="Voluntarias" fill="#475569" barSize={15} stackId="bajas" />
+                  <Bar dataKey="bajasPorFaltaPago" name="Por Falta de Pago" fill="#f43f5e" barSize={15} stackId="bajas" />
                 </ComposedChart>
               </ResponsiveContainer>
             </Box>
@@ -283,5 +383,5 @@ export default function Dashboard() {
       </Grid>
 
     </Box>
-  );
+  ); //QUEDAMOS EN UNIFICAR LOS GRAFICOS
 }

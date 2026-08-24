@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.velonet.backend.client.RealSoftwareClient;
@@ -59,6 +61,7 @@ public class DeudoresService {
         return totalDeudores;
     }
 
+    @Async
     public void guardarDeudoresHoy(){
         LocalDate hoy = LocalDate.now();
 
@@ -66,9 +69,18 @@ public class DeudoresService {
             return;
         }
 
-        int cantidad = getCantidadDeudoresActual();
-        HistorialDeudores registro = new HistorialDeudores(hoy, cantidad);
-        repository.save(registro);
-        System.out.println("Deudores guardado: " + cantidad);
+        try{
+            int cantidad = getCantidadDeudoresActual();
+            HistorialDeudores registro = new HistorialDeudores(hoy, cantidad);
+            repository.save(registro);
+            System.out.println("Deudores guardado: " + cantidad);
+        }catch (Exception e){
+            System.out.println("Error al guardar deudores: " + e.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "0 5 3 * * *")
+    public void snapshotDiarioDeudores() {
+        guardarDeudoresHoy();
     }
 }

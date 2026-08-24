@@ -6,6 +6,7 @@ export default function useDashboard() {
     const [metrics, setMetrics] = useState(null);
     const [curvaPagos, setCurvaPagos] = useState([]);
     const [deudores, setDeudores] = useState([]);
+    const [historialCuentaCorriente, setHistorialCuentaCorriente] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -16,11 +17,16 @@ export default function useDashboard() {
                 const data = await getMetrics();
                 const curva =  await getCurvaPagos(60);
                 const historico = await getHistoricoDeudores();
+                const historial = await getHistorialCuentaCorriente();
 
                 setMetrics(data);
                 setDeudores(historico);
                 setCurvaPagos(curva);
-            } finally {
+                setHistorialCuentaCorriente(historial.reverse()); //esto para mostrar la fecha mas antigua a la izquierda
+            } catch (error) {
+                console.error("Error al cargar datos del dashboard:", error);
+            }
+            finally {
                 setLoading(false)
             }
         }
@@ -29,6 +35,6 @@ export default function useDashboard() {
     }, []);
 
     return {
-        metrics, curvaPagos, loading, deudores
+        metrics, curvaPagos, loading, deudores, historialCuentaCorriente
     };
 }
