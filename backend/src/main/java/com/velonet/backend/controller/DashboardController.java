@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.velonet.backend.dto.BajasComparativaDTO;
 import com.velonet.backend.dto.CurvaPagoMensualDTO;
 import com.velonet.backend.dto.DashboardMetricsDTO;
 import com.velonet.backend.dto.DeudoresComparativaDTO;
 import com.velonet.backend.entity.HistorialCuentaCorriente;
+import com.velonet.backend.service.BajasService;
 import com.velonet.backend.service.CuentaCorrienteService;
 import com.velonet.backend.service.CurvaPagosService;
 import com.velonet.backend.service.DashboardService;
@@ -31,16 +33,17 @@ public class DashboardController {
     private final DeudoresHistoricosService deudoresHistoricoService;
     private final DeudoresService deudoresService;
     private final CuentaCorrienteService cuentaCorrienteService;
+    private final BajasService bajasService;
 
     public DashboardController(DashboardService dashboardService, CurvaPagosService curvaPagosService,
             DeudoresHistoricosService deudoresHistoricosService, DeudoresService deudoresService,
-            CuentaCorrienteService cuentaCorrienteService) {
+            CuentaCorrienteService cuentaCorrienteService, BajasService bajasService) {
         this.dashboardService = dashboardService;
         this.curvaPagosService = curvaPagosService;
         this.deudoresHistoricoService = deudoresHistoricosService;
         this.deudoresService = deudoresService;
         this.cuentaCorrienteService = cuentaCorrienteService;
-
+        this.bajasService = bajasService;
     }
 
     @GetMapping("/metrics")
@@ -97,5 +100,10 @@ public class DashboardController {
     @GetMapping("/cuenta-corriente/historial")
 public ResponseEntity<List<HistorialCuentaCorriente>> getHistorialCuentaCorriente() {
     return ResponseEntity.ok(cuentaCorrienteService.getHistorial());
+}
+
+@GetMapping("/bajas")
+public ResponseEntity<List<BajasComparativaDTO>> getBajas(@RequestParam(defaultValue = "3") int meses) {
+    return ResponseEntity.ok(bajasService.getCurvaBajas(meses));
 }
 }
