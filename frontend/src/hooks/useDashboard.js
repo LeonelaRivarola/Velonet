@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurvaPagos, getMetrics, getHistoricoDeudores, getHistorialCuentaCorriente } from "../services/dashboardService";
+import { getCurvaPagos, getMetrics, getHistoricoDeudores, getHistorialCuentaCorriente , getBajas} from "../services/dashboardService";
 
 export default function useDashboard() {
 
@@ -8,6 +8,8 @@ export default function useDashboard() {
     const [deudores, setDeudores] = useState([]);
     const [historialCuentaCorriente, setHistorialCuentaCorriente] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [bajas, setBajas] = useState([]); 
+
 
     useEffect(() => {
 
@@ -18,11 +20,14 @@ export default function useDashboard() {
                 const curva =  await getCurvaPagos(60);
                 const historico = await getHistoricoDeudores();
                 const historial = await getHistorialCuentaCorriente();
+                const bajas = await getBajas();
 
                 setMetrics(data);
                 setDeudores(historico);
                 setCurvaPagos(curva);
                 setHistorialCuentaCorriente(historial.reverse()); //esto para mostrar la fecha mas antigua a la izquierda
+                setBajas(bajas);
+
             } catch (error) {
                 console.error("Error al cargar datos del dashboard:", error);
             }
@@ -35,6 +40,6 @@ export default function useDashboard() {
     }, []);
 
     return {
-        metrics, curvaPagos, loading, deudores, historialCuentaCorriente
+        metrics, curvaPagos, loading, deudores, historialCuentaCorriente, bajas
     };
 }

@@ -25,4 +25,9 @@ export async function getHistorialCuentaCorriente() {
   const response = await fetch(`${API}/cuenta-corriente/historial`);
   if (!response.ok) throw new Error('Error al obtener historial de CC');
   return await response.json();
+};
+
+export async function getBajas(){
+    const response = await axios.get(`${API}/bajas`);
+    return response.data;
 }

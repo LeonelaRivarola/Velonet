@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, Grid2 as Grid, Typography, Paper, Button, Divider, Card, CardContent } from '@mui/material';
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import FilterBar from '../components/dashboard/FilterBar';
@@ -7,37 +7,10 @@ import CardMetric from '../components/dashboard/MetricCard';
 import { FiUsers, FiFileText, FiTrendingDown, FiActivity, FiDollarSign, FiAlertTriangle, FiCreditCard } from 'react-icons/fi';
 import useDashboard from '../hooks/useDashboard';
 
-// DATOS FICTICIOS COMPLETOS BASADOS EN EL AUDIO:
-const mockDatosControl = [
-  {
-    periodo: 'Abril',
-    recaudadoAlDia15: 1450000,
-    deudaFinMes: 420000,
-    cortadosAlDia23: 12,
-    bajasVoluntarias: 5,
-    bajasPorFaltaPago: 8
-  },
-  {
-    periodo: 'Mayo',
-    recaudadoAlDia15: 1620000,
-    deudaFinMes: 380000,
-    cortadosAlDia23: 8,
-    bajasVoluntarias: 4,
-    bajasPorFaltaPago: 6
-  },
-  {
-    periodo: 'Junio',
-    recaudadoAlDia15: 1890000,
-    deudaFinMes: 590000,
-    cortadosAlDia23: 19,
-    bajasVoluntarias: 9,
-    bajasPorFaltaPago: 14
-  },
-];
 
 export default function Dashboard() {
   const [cobroTerceros, setCobroTerceros] = useState(null);
-  const { metrics, curvaPagos, loading, deudores, historialCuentaCorriente } = useDashboard();
+  const { metrics, curvaPagos, loading, deudores, historialCuentaCorriente, bajas } = useDashboard();
 
   const handleSearch = (filters) => {
     console.log("Filtros aplicados (Contrato Modelo / Fechas):", filters);
@@ -169,10 +142,10 @@ export default function Dashboard() {
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <CardMetric
             title="Bajas de Contratos"
-            value="23"
+            value={bajas.length > 0 ? bajas[bajas.length - 1].cantidad : 0}
             icon={FiTrendingDown}
             color="error"
-            percentage="+12.4%"
+            percentage= {`Mes: ${bajas.length > 0 ? bajas[bajas.length - 1].periodo : '-'}`}
             isPositive={false}
           />
         </Grid>
@@ -310,21 +283,19 @@ export default function Dashboard() {
         <Grid size={{ xs: 12, md: 3 }}>
           <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#374151' }}>
-              5. Desglose de Bajas (Churn)
+            Bajas Totales (Churn)
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-              Motivos de desconformidad.
+              Cantidad de clientes dados de baja por mes.
             </Typography>
             <Box sx={{ width: '100%', height: 260 }}>
               <ResponsiveContainer>
-                <ComposedChart data={mockDatosControl} margin={{ left: -15, right: 5 }}>
+                <ComposedChart data={bajas} margin={{ left: -15, right: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
-                  <YAxis tick={{ fill: '#4b5563', fontSize: 12 }} />
-                  <Tooltip />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="bajasVoluntarias" name="Voluntarias" fill="#475569" barSize={15} stackId="bajas" />
-                  <Bar dataKey="bajasPorFaltaPago" name="Por Falta de Pago" fill="#f43f5e" barSize={15} stackId="bajas" />
+                  <YAxis tick={{ fill: '#4b5563', fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip formatter = {(val) => `${val} bajas`} />
+                  <Bar dataKey="cantidad" name="Bajas" fill="#f43f5e" barSize={35} radius={[4, 4, 0, 0]} />
                 </ComposedChart>
               </ResponsiveContainer>
             </Box>

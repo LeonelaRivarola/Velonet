@@ -1,4 +1,3 @@
-import React from "react";
 import { AppBar, Toolbar, Typography, IconButton, Chip, Box } from "@mui/material";
 import MenuOpenIcon from "@mui/icons-material/MenuOpen";
 import PersonIcon from "@mui/icons-material/Person";
@@ -49,7 +48,7 @@ function Header({ open, toggleDrawer}) {
                 </Box>
 
                 {/*der: chip usuario / pais + logo*/}
-                    <Box display="flex" alingItems="center" gap={2}>
+                    <Box display="flex" alignItems="center" gap={2}>
                     <Chip
                         icon={<PersonIcon style={{ color: '#0077b6', fontSize: 18}} />} 
                         label="Argentina"

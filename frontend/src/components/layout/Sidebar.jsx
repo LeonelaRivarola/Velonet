@@ -22,9 +22,8 @@ const menu = [
     { text: "Configuración", icon: <SettingIcon />}
 ];
 
-function Sidebar() {
+function Sidebar({ open }) {
     return (
-
         <Drawer
             variant="permanent"
             sx={{
@@ -46,9 +45,8 @@ function Sidebar() {
                 },
             }}
         >
-
             <Toolbar />
-            <Box sx={{ overflow: 'auto', mt: 2, px: 1 }}>
+            <Box sx={{ overflow: 'hidden', mt: 2, px: 1 }}>
             <List>
                 {menu.map((item) => (
                         <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 1 }}>
