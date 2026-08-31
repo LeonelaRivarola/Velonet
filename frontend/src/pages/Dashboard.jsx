@@ -4,7 +4,7 @@ import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianG
 import FilterBar from '../components/dashboard/FilterBar';
 import CardMetric from '../components/dashboard/MetricCard';
 
-import { FiUsers, FiFileText, FiTrendingDown, FiActivity, FiDollarSign, FiAlertTriangle, FiCreditCard } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiTrendingDown, FiDollarSign, FiCreditCard } from 'react-icons/fi';
 import useDashboard from '../hooks/useDashboard';
 
 
@@ -94,7 +94,7 @@ export default function Dashboard() {
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CardMetric
             title="Clientes Activos"
             value={metrics?.totalClientesActivos ?? 0}
@@ -106,7 +106,7 @@ export default function Dashboard() {
         </Grid>
 
         {/*Tarjeta kpi 3: deuda cuenta corriente */}
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CardMetric
             title="Deuda en Cuenta Corriente"
             value={`$${(ultimoMontoCC / 1000000).toFixed(2)}M`}
@@ -117,7 +117,7 @@ export default function Dashboard() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CardMetric
             title="Contratos Activos"
             value={metrics?.totalContratoActivos ?? 0}
@@ -128,36 +128,13 @@ export default function Dashboard() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <CardMetric
-            title="Cortados (Día 23)"
-            value="19"
-            icon={FiActivity}
-            color="warning"
-            percentage="-5.1%"
-            isPositive={true}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CardMetric
             title="Bajas de Contratos"
             value={bajas.length > 0 ? bajas[bajas.length - 1].cantidad : 0}
             icon={FiTrendingDown}
             color="error"
             percentage= {`Mes: ${bajas.length > 0 ? bajas[bajas.length - 1].periodo : '-'}`}
-            isPositive={false}
-          />
-        </Grid>
-
-        {/* NUEVO KPI: CUMPLIENDO PUNTO 5 DEL AUDIO */}
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <CardMetric
-            title="Sin Cobro (Auditoría)" //
-            value={metrics?.contratosSinCobroAuditoria ?? 0}
-            icon={FiAlertTriangle}
-            color="error"
-            percentage="Revisar"
             isPositive={false}
           />
         </Grid>
@@ -354,5 +331,5 @@ export default function Dashboard() {
       </Grid>
 
     </Box>
-  ); //QUEDAMOS EN UNIFICAR LOS GRAFICOS
+  ); 
 }
