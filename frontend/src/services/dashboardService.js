@@ -31,3 +31,13 @@ export async function getBajas(){
     const response = await axios.get(`${API}/bajas`);
     return response.data;
 }
+
+export async function getVencimientos(){
+    const response = await axios.get(`${API}/vencimientos`);
+    return response.data;
+}
+
+export async function getAltas(){
+    const response = await axios.get(`${API}/altas`);  
+    return response.data;
+}

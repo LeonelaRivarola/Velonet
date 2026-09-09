@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Box, Grid2 as Grid, Typography, Paper, Button, Divider, Card, CardContent } from '@mui/material';
-import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import FilterBar from '../components/dashboard/FilterBar';
+import { Box, Grid2 as Grid, Typography, Paper, Button, Divider, Card, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip } from '@mui/material';
+import { ResponsiveContainer, ComposedChart, Line, LineChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import CardMetric from '../components/dashboard/MetricCard';
 
 import { FiUsers, FiFileText, FiTrendingDown, FiDollarSign, FiCreditCard } from 'react-icons/fi';
@@ -10,11 +9,11 @@ import useDashboard from '../hooks/useDashboard';
 
 export default function Dashboard() {
   const [cobroTerceros, setCobroTerceros] = useState(null);
-  const { metrics, curvaPagos, loading, deudores, historialCuentaCorriente, bajas } = useDashboard();
+  const { metrics, curvaPagos, loading, deudores, historialCuentaCorriente, bajas, altas, vencimientos } = useDashboard();
 
-  const handleSearch = (filters) => {
-    console.log("Filtros aplicados (Contrato Modelo / Fechas):", filters);
-  };
+  // const handleSearch = (filters) => {
+  //   console.log("Filtros aplicados (Contrato Modelo / Fechas):", filters);
+  // };
 
   const calcularCobroTerceros = () => {
     const baseCalculo = 1845000;
@@ -27,14 +26,19 @@ export default function Dashboard() {
   }));
 
 
-  const normalizarPeriodo = (fechaOMes) => {
-  if (fechaOMes.includes('-') && fechaOMes.split('-')[0].length === 4) {
-    const [anio, mes] = fechaOMes.split('-');
-    return `${mes}-${anio}`;
-  }
-  return fechaOMes;
-};
 
+  const normalizarPeriodo = (fechaOMes) => {
+    if (fechaOMes.includes('-') && fechaOMes.split('-')[0].length === 4) {
+      const [anio, mes] = fechaOMes.split('-');
+      return `${mes}-${anio}`;
+    }
+    return fechaOMes;
+  };
+
+  const datosAltas = (altas || []).map((item) => ({
+    periodo: normalizarPeriodo(item.periodo),
+    cantidad: item.cantidad
+  }));
   //unificacion de deuda en $ y cantidad de deudores
   const datosDeudaYDeudores = useMemo(() => {
     const mapaDatos = {};
@@ -58,6 +62,19 @@ export default function Dashboard() {
 
   const ultimoMontoCC = historialCuentaCorriente.length > 0 ? historialCuentaCorriente[historialCuentaCorriente.length - 1].monto : 0;
 
+  const facturasPendientes = vencimientos.filter(
+    item => item.estado === 'Pendiente'
+  );
+
+  const saldoPendienteVencimientos = facturasPendientes.reduce((total, item) => total + Number(item.saldo || 0), 0);
+
+  const formatoMoneda = (valor) => {
+    return Number(valor || 0).toLocaleString('es-AR', {
+      style: 'currency',
+      currency: 'ARS'
+    });
+  };
+
   if (loading) {
     return <div>Cargando...</div>;
   }
@@ -65,34 +82,48 @@ export default function Dashboard() {
   return (
     <Box sx={{ width: '100%', backgroundColor: '#f8fafc', minHeight: '100%' }}>
 
-      {/* Banner Superior */}
-      <Paper
-        elevation={0}
+      {/* ENCABEZADO DEL DASHBOARD */}
+      <Box
         sx={{
-          p: 3,
           mb: 4,
-          backgroundColor: '#ffffff',
-          borderLeft: '6px solid #0d47a1',
-          borderRadius: '8px',
-          boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)'
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
         }}
       >
-        <Typography variant="h5" fontWeight="800" sx={{ color: '#0d47a1', mb: 0.5 }}>
-          CONCILIACIÓN Y CONTROL DE CLIENTES
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Panel ejecutivo automatizado. Comparativas mensuales fijadas por puntos de control operativos.
-        </Typography>
-      </Paper>
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              color: '#03045e',
+              letterSpacing: '-0.5px',
+              mb: 0.5,
+            }}
+          >
+            Dashboard
+          </Typography>
 
-      {/* Filtros */}
-      <FilterBar onSearch={handleSearch} />
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#64748b',
+            }}
+          >
+            Resumen general de clientes, contratos y cobranza
+          </Typography>
+        </Box>
+      </Box>
+
 
       {/* Sección KPIs principales*/}
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold', color: '#0d47a1', letterSpacing: '0.5px' }}>
-        KPI // CONTROL DE CONTRATOS Y CLIENTES
+      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, color: '#03045e', letterSpacing: '0.3px'}}
+      >
+        RESUMEN
       </Typography>
 
+      {/* Clientes activos */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CardMetric
@@ -100,34 +131,40 @@ export default function Dashboard() {
             value={metrics?.totalClientesActivos ?? 0}
             icon={FiUsers}
             color="primary"
-            percentage="+2.1%"
-            isPositive={true}
           />
         </Grid>
 
-        {/*Tarjeta kpi 3: deuda cuenta corriente */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <CardMetric
-            title="Deuda en Cuenta Corriente"
-            value={`$${(ultimoMontoCC / 1000000).toFixed(2)}M`}
-            icon={FiCreditCard}
-            color="error"
-            percentage="Snapshot 3AM"
-            isPositive={false}
-          />
-        </Grid>
-
+        {/* Contratos activos */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CardMetric
             title="Contratos Activos"
             value={metrics?.totalContratoActivos ?? 0}
             icon={FiFileText}
             color="success"
-            percentage="+1.8%"
-            isPositive={true}
           />
         </Grid>
 
+        {/* Tarjeta kpi 3: deuda cuenta corriente */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <CardMetric
+            title="Deuda en Cuenta Corriente"
+            value={`$${(ultimoMontoCC / 1000000).toFixed(2)}M`}
+            icon={FiCreditCard}
+            color="error"
+          />
+        </Grid>
+
+        {/* Clientes deudores */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <CardMetric
+            title="Clientes Deudores"
+            value={deudores.length > 0 ? deudores[deudores.length - 1].cantidad : 0}
+            icon={FiUsers}
+            color="error"
+          />
+        </Grid>
+
+        {/* bajas
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CardMetric
             title="Bajas de Contratos"
@@ -137,21 +174,21 @@ export default function Dashboard() {
             percentage= {`Mes: ${bajas.length > 0 ? bajas[bajas.length - 1].periodo : '-'}`}
             isPositive={false}
           />
-        </Grid>
+        </Grid> */}
       </Grid>
 
       {/* Sección de Gráficos Separados */}
       <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold', color: '#0d47a1', letterSpacing: '0.5px' }}>
-        PUNTOS DE CONTROL MENSUAL COMPARATIVOS
+        COBRANZA
       </Typography>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
 
         {/* GRÁFICO 1: Curvas de Pago al Día 15 */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{display: 'flex'}}>
+          <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%', width: '100%', boxSizing: 'border-box' }}>
             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#0d47a1' }}>
-              1. Curvas de Pago (Día 15)
+              Curvas de Pago (Día 15)
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
               Evolución de montos recaudados en Cuenta Corriente.
@@ -174,66 +211,67 @@ export default function Dashboard() {
 
         {/* NUEVO GRÁFICO 2: HISTORIAL DEUDA CUENTA CORRIENTE (KPI 3) */}
         {/* GRÁFICO 2: Historial Deuda + Clientes Deudores */}
-<Grid size={{ xs: 12, md: 4 }}>
-  <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
-    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#d32f2f' }}>
-      2. Historial Deuda Cuenta Corriente
-    </Typography>
-    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-      Evolución de la deuda en Cuenta Corriente vs. cantidad de clientes deudores.
-    </Typography>
-    <Box sx={{ width: '100%', height: 260 }}>
-      <ResponsiveContainer>
-        <ComposedChart data={datosDeudaYDeudores} margin={{ top: 10, left: 5, right: 15, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
+        <Grid size={{ xs: 12, md: 6 }} sx={{display: 'flex'}}>
+          <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%', width: '100%', boxSizing: 'border-box' }}>
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#d32f2f' }}>
+              Historial Deuda Cuenta Corriente
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+              Evolución de la deuda en Cuenta Corriente vs. cantidad de clientes deudores.
+            </Typography>
+            <Box sx={{ width: '100%', height: 260 }}>
+              <ResponsiveContainer>
+                <ComposedChart data={datosDeudaYDeudores} margin={{ top: 10, left: 5, right: 15, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
 
-          <YAxis
-            yAxisId="izq"
-            orientation="left"
-            tick={{ fill: '#d32f2f', fontSize: 10 }}
-            tickFormatter={(val) => `$${(val / 1000000).toFixed(1)}M`}
-          />
-          <YAxis
-            yAxisId="der"
-            orientation="right"
-            tick={{ fill: '#0d47a1', fontSize: 10 }}
-            allowDecimals={false}
-          />
+                  <YAxis
+                    yAxisId="izq"
+                    orientation="left"
+                    tick={{ fill: '#d32f2f', fontSize: 10 }}
+                    tickFormatter={(val) => `$${(val / 1000000).toFixed(1)}M`}
+                  />
+                  <YAxis
+                    yAxisId="der"
+                    orientation="right"
+                    tick={{ fill: '#0d47a1', fontSize: 10 }}
+                    allowDecimals={false}
+                  />
 
-          <Tooltip
-            formatter={(val, name) =>
-              name === 'Deuda ($)' ? `$${Number(val).toLocaleString('es-AR')}` : `${val} clientes`
-            }
-          />
-          <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
+                  <Tooltip
+                    formatter={(val, name) =>
+                      name === 'Deuda ($)' ? `$${Number(val).toLocaleString('es-AR')}` : `${val} clientes`
+                    }
+                  />
+                  <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
 
-          <Bar
-            yAxisId="der"
-            dataKey="deudoresCant"
-            name="Clientes Deudores"
-            fill="#93c5fd"
-            barSize={30}
-            radius={[6, 6, 0, 0]}
-          />
-          <Line
-            yAxisId="izq"
-            type="monotone"
-            dataKey="deudaTotal"
-            name="Deuda ($)"
-            stroke="#d32f2f"
-            strokeWidth={3}
-            dot={{ r: 5, fill: '#d32f2f', strokeWidth: 2, stroke: '#fff' }}
-            activeDot={{ r: 7 }}
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
-    </Box>
-  </Paper>
-</Grid>
+                  <Bar
+                    yAxisId="der"
+                    dataKey="deudoresCant"
+                    name="Clientes Deudores"
+                    fill="#93c5fd"
+                    barSize={30}
+                    radius={[6, 6, 0, 0]}
+                  />
+                  <Line
+                    yAxisId="izq"
+                    type="monotone"
+                    dataKey="deudaTotal"
+                    name="Deuda ($)"
+                    stroke="#d32f2f"
+                    strokeWidth={3}
+                    dot={{ r: 5, fill: '#d32f2f', strokeWidth: 2, stroke: '#fff' }}
+                    activeDot={{ r: 7 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
 
-        {/* GRÁFICO 3: Curvas de Deudores */}
-        {/* <Grid size={{ xs: 12, md: 3 }}>
+      {/* GRÁFICO 3: Curvas de Deudores */}
+      {/* <Grid size={{ xs: 12, md: 3 }}>
           <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#b91c1c' }}>
               2. Deudores e Impacto de Cortes
@@ -256,11 +294,114 @@ export default function Dashboard() {
           </Paper>
         </Grid> */}
 
+      {/* Vencimientos */}
+      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold', color: '#0d47a1', letterSpacing: '0.5px' }}>
+        Vencimientos
+      </Typography>
+
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {/* Card cantidad */}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <CardMetric
+            title="Facturas Pendientes"
+            value={facturasPendientes.length}
+            icon={FiCreditCard}
+            color="warning"
+          />
+        </Grid>
+
+        {/* Card saldo */}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <CardMetric
+            title="Saldo Pendiente"
+            value={formatoMoneda(saldoPendienteVencimientos)}
+            icon={FiDollarSign}
+            color="error"
+          />
+        </Grid>
+
+      </Grid>
+
+
+      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold', color: '#0d47a1', letterSpacing: '0.5px' }}>
+        Clientes
+      </Typography>
+
+      <Grid container spacing={2}>
+
+        {/* ALTAS */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper
+            sx={{
+              p: 3,
+              borderRadius: '8px',
+              boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)',
+              height: '100%'
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#374151' }}>
+              Altas de clientes
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+              Cantidad de clientes dados de alta por mes.
+            </Typography>
+
+            <Box sx={{ width: '100%', height: 260 }}>
+              <ResponsiveContainer>
+                <LineChart
+                  data={datosAltas}
+                  margin={{ top: 10, left: -15, right: 5, bottom: 10 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#f1f5f9"
+                  />
+
+                  <XAxis
+                    dataKey="periodo"
+                    tick={{
+                      fill: '#64748b',
+                      fontSize: 12
+                    }}
+                  />
+
+                  <YAxis
+                    tick={{
+                      fill: '#0d47a1',
+                      fontSize: 12
+                    }}
+                    allowDecimals={false}
+                  />
+
+                  <Tooltip
+                    formatter={(val) => `${val} altas`}
+                  />
+
+                  <Line
+                    type="monotone"
+                    dataKey="cantidad"
+                    name="Altas"
+                    stroke="#0d47a1"
+                    strokeWidth={3}
+                    dot={{
+                      r: 5,
+                      fill: '#0d47a1',
+                      strokeWidth: 2,
+                      stroke: '#fff'
+                    }}
+                    activeDot={{ r: 7 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
+        </Grid>
+
         {/* GRÁFICO 4: Bajas */}
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)', height: '100%' }}>
             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', color: '#374151' }}>
-            Bajas Totales (Churn)
+              Bajas Totales (Churn)
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
               Cantidad de clientes dados de baja por mes.
@@ -271,7 +412,7 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="periodo" tick={{ fill: '#64748b', fontSize: 12 }} />
                   <YAxis tick={{ fill: '#4b5563', fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip formatter = {(val) => `${val} bajas`} />
+                  <Tooltip formatter={(val) => `${val} bajas`} />
                   <Bar dataKey="cantidad" name="Bajas" fill="#f43f5e" barSize={35} radius={[4, 4, 0, 0]} />
                 </ComposedChart>
               </ResponsiveContainer>
@@ -281,6 +422,95 @@ export default function Dashboard() {
 
       </Grid>
 
+
+      {/* Tabla de vencimientos */}
+      {/* <Paper
+          sx={{
+            mb: 4,
+            borderRadius: '8px',
+            boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.04)',
+            overflow: 'hidden'
+          }}
+        >
+          <Box sx={{ p: 3, pb: 2 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 'bold', color: '#0d47a1' }}
+            >
+              Facturas pendientes
+            </Typography>
+
+            <Typography variant="caption" color="text.secondary">
+              Últimas facturas con saldo pendiente de pago.
+            </Typography>
+          </Box>
+
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Cliente</strong></TableCell>
+                  <TableCell><strong>Factura</strong></TableCell>
+                  <TableCell><strong>Fecha</strong></TableCell>
+                  <TableCell><strong>Vencimiento</strong></TableCell>
+                  <TableCell align="right"><strong>Importe</strong></TableCell>
+                  <TableCell align="right"><strong>Saldo</strong></TableCell>
+                  <TableCell><strong>Estado</strong></TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {facturasPendientes.slice(0, 20).map((item, index) => (
+                  <TableRow key={`${item.clienteId}-${item.factura}-${index}`}>
+
+                    <TableCell>
+                      {item.clienteId}
+                    </TableCell>
+
+                    <TableCell>
+                      {item.factura || '-'}
+                    </TableCell>
+
+                    <TableCell>
+                      {item.fecha || '-'}
+                    </TableCell>
+
+                    <TableCell>
+                      {item.fechaVto || '-'}
+                    </TableCell>
+
+                    <TableCell align="right">
+                      {formatoMoneda(item.importe)}
+                    </TableCell>
+
+                    <TableCell align="right">
+                      {formatoMoneda(item.saldo)}
+                    </TableCell>
+
+                    <TableCell>
+                      <Chip
+                        label={item.estado}
+                        size="small"
+                        color="warning"
+                        variant="outlined"
+                      />
+                    </TableCell>
+
+                  </TableRow>
+                ))}
+
+                {facturasPendientes.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      No hay facturas pendientes.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+ */}
       {/* Módulo de Liquidación a Terceros */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
@@ -330,6 +560,6 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
-    </Box>
-  ); 
+    </Box >
+  );
 }

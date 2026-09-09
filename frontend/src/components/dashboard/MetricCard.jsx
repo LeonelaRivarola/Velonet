@@ -1,21 +1,24 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, Avatar } from '@mui/material';
 
-export default function CardMetric({ title, value, icon: Icon, color, percentage, isPositive }) {
+export default function CardMetric({ title, value, icon: Icon, color }) {
 
-    // Mapeo manual de colores para encajar con la estética limpia de Velonet
     const getColorStyles = (severity) => {
         switch (severity) {
-            case 'primary': // Clientes Activos (Azul Velonet)
-                return { bg: '#e3f2fd', color: '#0d47a1' };
-            case 'success': // Contratos Habilitados (Verde)
-                return { bg: '#e8f5e9', color: '#2e7d32' };
-            case 'warning': // Contratos sin cobro (Naranja de acento)
+            case 'primary':
+                return { bg: '#e0f7fa', color: '#0077b6' };
+
+            case 'success':
+                return { bg: '#e0f7fa', color: '#0077b6' };
+
+            case 'warning':
                 return { bg: '#fff3e0', color: '#e65100' };
-            case 'error': // Cortes / Alertas (Rojo)
+
+            case 'error':
                 return { bg: '#ffebee', color: '#c62828' };
+
             default:
-                return { bg: '#f5f5f5', color: '#757575' };
+                return { bg: '#f1f5f9', color: '#64748b' };
         }
     };
 
@@ -28,63 +31,69 @@ export default function CardMetric({ title, value, icon: Icon, color, percentage
                 borderRadius: '12px',
                 backgroundColor: '#ffffff',
                 border: '1px solid #e2e8f0',
-                minHeight: '110px',
+                minHeight: '140px',
                 display: 'flex',
                 alignItems: 'center',
-                // transition: 'all 0.2s ease-in-out',
-                // '&:hover': { 
-                //   transform: 'translateY(-2px)',
-                //   boxShadow: '0px 6px 20px rgba(13, 71, 161, 0.08)' // Sutil destello azul al hacer hover
-                // }
+                transition: 'all 0.2s ease',
+
+                '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 18px rgba(3, 4, 94, 0.08)',
+                    borderColor: '#90e0ef',
+                },
             }}
         >
-            <CardContent sx={{ p: 2, width: '100%', '&:last-child': { pb: 2 } }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
+            <CardContent
+                sx={{
+                    p: 2.5,
+                    '&:last-child': {
+                        pb: 2.5,
+                    },
+                }}
+            >
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                >
                     <Box>
                         <Typography
                             variant="caption"
-                            color="text.secondary"
-                            fontWeight={700}
-                            sx={{ textTransform: 'uppercase', letterSpacing: '0.3px', display: 'block', minHeight: '16px' }}
+                            sx={{
+                                color: '#64748b',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.4px',
+                                display: 'block',
+                                height: '36px',
+                                lineHeight: 1.5,
+                            }}
                         >
                             {title}
                         </Typography>
+
                         <Typography
-                            variant="h5"
-                            fontWeight={800}
-                            sx={{ color: '#1e293b', mt: 0.2 }}
+                            variant="h4"
+                            sx={{
+                                color: '#03045e',
+                                fontWeight: 800,
+                                lineHeight: 1.2,
+                            }}
                         >
                             {value}
                         </Typography>
-
-                        {/*comparativa*/}
-                        {percentage && (
-                            <Typography
-                                variant="caption"
-                                fontWeight={600}
-                                sx={{
-                                    color: isPositive ? '#2e7d32' : '#c62828',
-                                    backgroundColor: isPositive ? '#e8f5e9' : '#ffebee',
-                                    padding: '2px 6px',
-                                    borderRadius: '4px',
-                                    display: 'inline-block',
-                                    mt: 0.5,
-                                }}
-                            >
-                                {percentage} vs mes anterior
-                            </Typography>
-                        )}
                     </Box>
 
                     <Avatar
                         sx={{
                             bgcolor: styles.bg,
                             color: styles.color,
-                            width: 40,
-                            height: 40
+                            width: 46,
+                            height: 46,
+                            borderRadius: '12px',
                         }}
                     >
-                        <Icon size={20} />
+                        <Icon size={21} />
                     </Avatar>
                 </Box>
             </CardContent>

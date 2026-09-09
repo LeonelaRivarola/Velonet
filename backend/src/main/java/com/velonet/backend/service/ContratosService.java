@@ -46,7 +46,12 @@ public class ContratosService {
 
         long contratosSinCobro = 0;
 
-        Map<String, Object> respuesta = obtenerContratos();
+        Map<String, Object> body = new HashMap<>();
+        body.put("action","contratos");
+        body.put("incluye_bajas","N");
+        body.put("estado_cliente","4");
+
+        Map<String, Object> respuesta = realSoftwareClient.post(body);
 
         if (respuesta.containsKey("contratos")) {
 
@@ -56,16 +61,7 @@ public class ContratosService {
 
                 List<Map<String, Object>> lista = (List<Map<String, Object>>) obj;
 
-                for (Map<String, Object> contrato : lista) {
-
-                    String obs = (String) contrato.get("observaciones");
-
-                    if (obs != null &&
-                            obs.toLowerCase().contains("bonificado")) {
-
-                        contratosSinCobro++;
-                    }
-                }
+                contratosSinCobro = lista.size();
             }
         }
 

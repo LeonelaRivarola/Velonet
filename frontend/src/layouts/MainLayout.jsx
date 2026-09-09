@@ -5,14 +5,14 @@ import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
 
 function MainLayout({ children }) {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     const toggleDrawer = () => setOpen((prev) => !prev);
 
     return (
         <Box sx={{ display: "flex" }}>
 
-            <Header open={open} toggleDrawer={toggleDrawer} />
-            <Sidebar open={open} />
+            <Header />
+            <Sidebar open={open} toggleDrawer={toggleDrawer} />
 
             <Box component="main"
                 sx={{

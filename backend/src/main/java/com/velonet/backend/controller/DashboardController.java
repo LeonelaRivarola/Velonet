@@ -10,17 +10,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.velonet.backend.dto.AltasComparativaDTO;
 import com.velonet.backend.dto.BajasComparativaDTO;
 import com.velonet.backend.dto.CurvaPagoMensualDTO;
 import com.velonet.backend.dto.DashboardMetricsDTO;
 import com.velonet.backend.dto.DeudoresComparativaDTO;
 import com.velonet.backend.entity.HistorialCuentaCorriente;
+import com.velonet.backend.service.AltasService;
 import com.velonet.backend.service.BajasService;
 import com.velonet.backend.service.CuentaCorrienteService;
 import com.velonet.backend.service.CurvaPagosService;
 import com.velonet.backend.service.DashboardService;
 import com.velonet.backend.service.DeudoresHistoricosService;
 import com.velonet.backend.service.DeudoresService;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/dashboard")
@@ -32,17 +35,19 @@ public class DashboardController {
     private final DeudoresHistoricosService deudoresHistoricoService;
     private final DeudoresService deudoresService;
     private final CuentaCorrienteService cuentaCorrienteService;
+    private final AltasService altasService;
     private final BajasService bajasService;
 
     public DashboardController(DashboardService dashboardService, CurvaPagosService curvaPagosService,
             DeudoresHistoricosService deudoresHistoricosService, DeudoresService deudoresService,
-            CuentaCorrienteService cuentaCorrienteService, BajasService bajasService) {
+            CuentaCorrienteService cuentaCorrienteService, BajasService bajasService, AltasService altasService) {
         this.dashboardService = dashboardService;
         this.curvaPagosService = curvaPagosService;
         this.deudoresHistoricoService = deudoresHistoricosService;
         this.deudoresService = deudoresService;
         this.cuentaCorrienteService = cuentaCorrienteService;
         this.bajasService = bajasService;
+        this.altasService = altasService;
     }
 
     @GetMapping("/metrics")
@@ -88,8 +93,6 @@ public class DashboardController {
         return ResponseEntity.ok(saldoTotal);
     }
 
-
-
     @GetMapping("/cuenta-corriente/snapshot")
     public ResponseEntity<String> generarSnapshotCuentaCorriente() {
         cuentaCorrienteService.guardarDeudaHoy();
@@ -97,12 +100,22 @@ public class DashboardController {
     }
 
     @GetMapping("/cuenta-corriente/historial")
-public ResponseEntity<List<HistorialCuentaCorriente>> getHistorialCuentaCorriente() {
-    return ResponseEntity.ok(cuentaCorrienteService.getHistorial());
-}
+    public ResponseEntity<List<HistorialCuentaCorriente>> getHistorialCuentaCorriente() {
+        return ResponseEntity.ok(cuentaCorrienteService.getHistorial());
+    }
 
-@GetMapping("/bajas")
-public ResponseEntity<List<BajasComparativaDTO>> getBajas(@RequestParam(defaultValue = "3") int meses) {
-    return ResponseEntity.ok(bajasService.getCurvaBajas(meses));
-}
+    @GetMapping("/vencimientos")
+    public ResponseEntity<List<Map<String, Object>>> getVencimiento() {
+        return ResponseEntity.ok(cuentaCorrienteService.getVencimientos());
+    }
+
+    @GetMapping("/altas")
+    public ResponseEntity<List<AltasComparativaDTO>> getAltas(@RequestParam(defaultValue = "3") int meses) {
+        return ResponseEntity.ok(altasService.getCurvaAltas(meses));
+    }
+
+    @GetMapping("/bajas")
+    public ResponseEntity<List<BajasComparativaDTO>> getBajas(@RequestParam(defaultValue = "3") int meses) {
+        return ResponseEntity.ok(bajasService.getCurvaBajas(meses));
+    }
 }

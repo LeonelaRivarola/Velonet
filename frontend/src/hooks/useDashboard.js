@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurvaPagos, getMetrics, getHistoricoDeudores, getHistorialCuentaCorriente , getBajas} from "../services/dashboardService";
+import { getCurvaPagos, getMetrics, getHistoricoDeudores, getHistorialCuentaCorriente , getBajas, getVencimientos, getAltas} from "../services/dashboardService";
 
 export default function useDashboard() {
 
@@ -9,6 +9,8 @@ export default function useDashboard() {
     const [historialCuentaCorriente, setHistorialCuentaCorriente] = useState([]);
     const [loading, setLoading] = useState(true);
     const [bajas, setBajas] = useState([]); 
+    const [vencimientos, setVencimientos] = useState([]); 
+    const [altas, setAltas] = useState([]);
 
 
     useEffect(() => {
@@ -21,12 +23,16 @@ export default function useDashboard() {
                 const historico = await getHistoricoDeudores();
                 const historial = await getHistorialCuentaCorriente();
                 const bajas = await getBajas();
+                const altas = await getAltas();
+                const vencimientos = await getVencimientos();
 
                 setMetrics(data);
                 setDeudores(historico);
                 setCurvaPagos(curva);
                 setHistorialCuentaCorriente(historial.reverse()); //esto para mostrar la fecha mas antigua a la izquierda
                 setBajas(bajas);
+                setVencimientos(vencimientos); 
+                setAltas(altas);
 
             } catch (error) {
                 console.error("Error al cargar datos del dashboard:", error);
@@ -40,6 +46,6 @@ export default function useDashboard() {
     }, []);
 
     return {
-        metrics, curvaPagos, loading, deudores, historialCuentaCorriente, bajas
+        metrics, curvaPagos, loading, deudores, historialCuentaCorriente, bajas, vencimientos, altas
     };
 }

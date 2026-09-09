@@ -204,6 +204,106 @@ public class CuentaCorrienteService {
         return repository.findTop10ByOrderByFechaDesc();
     }
 
+    public List<Map<String, Object>> getVencimientos() {
+        Map<String, Object> body = new HashMap<>();
+        body.put("action", "clientes_consulta");
+        body.put("estado", "1");
+        body.put("cantidad", 100);
+
+        List<Map<String, Object>> vencimientos = new java.util.ArrayList<>();
+
+        int offset = 0;
+        int resultados = Integer.MAX_VALUE;
+
+        while (offset < resultados) {
+            body.put("offset", offset);
+
+            Map<String, Object> respuesta = realSoftwareClient.post(body);
+            System.out.println("RESPUESTA CLIENTES VENCIMIENTOS: " + respuesta);
+
+            if (respuesta == null || !respuesta.containsKey("resultados")) {
+                break;
+            }
+
+            resultados = Integer.parseInt(respuesta.get("resultados").toString());
+            Map<String, Object> clientes = (Map<String, Object>) respuesta.get("clientes");
+
+            if (clientes == null || clientes.isEmpty()) {
+                break;
+            }
+
+            List<CompletableFuture<Map<String, Object>>> tareas = clientes.keySet().stream()
+                    .map(clienteIdStr -> CompletableFuture.supplyAsync(() -> {
+                        try {
+                            Long clienteId = Long.parseLong(clienteIdStr);
+                            Map<String, Object> factura = getUltimaFactura(clienteId);
+
+                            if (!factura.isEmpty()) {
+                                factura.put("clienteId", clienteId);
+                                return factura;
+                            }
+
+                        } catch (Exception e) {
+                            System.err.println(
+                                    "Error obteniendo factura del cliente " + clienteIdStr + ": " + e.getMessage());
+                        }
+
+                        return null;
+                    }, executor))
+                    .toList();
+
+            CompletableFuture.allOf(
+                    tareas.toArray(new CompletableFuture[0])).join();
+
+            for (CompletableFuture<Map<String, Object>> tarea : tareas) {
+                Map<String, Object> factura = tarea.join();
+
+                if (factura != null) {
+                    vencimientos.add(factura);
+                }
+            }
+            offset += 100;
+        }
+        return vencimientos;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getUltimaFactura(Long clienteId) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("action", "ctacte");
+        body.put("cli_id", clienteId);
+
+        Map<String, Object> response = realSoftwareClient.post(body);
+
+        List<Map<String, Object>> comprobantes = (List<Map<String, Object>>) response.get("cmps");
+
+        Map<String, Object> resultado = new HashMap<>();
+
+        if (comprobantes == null || comprobantes.isEmpty()) {
+            return resultado;
+        }
+
+        // primer comprobante, ultima fecha
+
+        Map<String, Object> ultimaFactura = comprobantes.get(0);
+
+        resultado.put("factura", ultimaFactura.get("numero"));
+        resultado.put("fecha", ultimaFactura.get("fecha"));
+        resultado.put("fechaVto", ultimaFactura.get("fecha_vto"));
+        resultado.put("importe", ultimaFactura.get("importe"));
+        resultado.put("saldo", ultimaFactura.get("saldo"));
+
+        Number saldo = (Number) ultimaFactura.get("saldo");
+
+        if (saldo != null && saldo.doubleValue() == 0) {
+            resultado.put("estado", "Pagado");
+        } else {
+            resultado.put("estado", "Pendiente");
+        }
+        return resultado;
+    }
+
     // DEBUG / PRUEBA
     public double probarClientes() {
         Map<String, Object> body = new HashMap<>();
